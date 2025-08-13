@@ -1,48 +1,48 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { getProductsPage, prefetchProductsPage } from '../api/productsApi';
+import { useEffect, useState , useMemo} from "react";
+import useSWR, { preload } from "swr";
+import { getProductsPage } from "../api/productsApi";
+
+const key = (page, pageSize) => ["/products", page, pageSize];
+
+const fetcher = ([, page, pageSize]) => getProductsPage(page, pageSize);
 
 export function useProducts(initialPage = 1, pageSize = 48) {
   const [page, setPage] = useState(initialPage);
-  const [state, setState] = useState({ status: 'idle', data: null, error: null });
-  const abortRef = useRef(null);
 
-  const canNext = state.data?.pagination.hasNext;
-  const canPrev = state.data?.pagination.hasPrev;
-  
+  const { data, error, isLoading, isValidating, mutate } = useSWR(
+    key(page, pageSize),
+    fetcher,
+    { keepPreviousData: true, revalidateOnFocus: true }
+  );
 
-  const load = useMemo(() => {
-    return async (p) => {
-      if (abortRef.current) abortRef.current.abort();
-      const ctrl = new AbortController();
-      abortRef.current = ctrl;
-
-      setState((s) => ({ ...s, status: 'loading' }));
-
-      try {
-        const res = await getProductsPage(p, pageSize, { signal: ctrl.signal });
-        setState({ status: 'success', data: res, error: null });
-        if (res.pagination.hasNext) prefetchProductsPage(p + 1, pageSize); // prefetch next page
-      } catch (e) {
-        if (e?.name === 'AbortError') return;
-        setState({ status: 'error', data: null, error: e });
-      }
-      
-    };
-  }, [pageSize]);
-
+  // Prefetch next page 
   useEffect(() => {
-    load(page);
-    return () => abortRef.current?.abort();
-  }, [page, load]);
+    if (data?.pagination?.hasNext) {
+      const nextPage = page + 1;
+      preload(key(nextPage, pageSize), fetcher);
+    }
+  }, [data?.pagination?.hasNext, page, pageSize]);
+
+  const state = useMemo(() => {
+    if (isLoading && !data) return { status: "loading", data: null, error: null };
+    if (error) return { status: "error", data: null, error };
+    if (data) return { status: "success", data, error: null };
+    return { status: "idle", data: null, error: null };
+  }, [isLoading, data, error]);
+
+  const canNext = data?.pagination?.hasNext;
+  const canPrev = data?.pagination?.hasPrev;
 
   return {
     page,
     pageSize,
-    state,         // { status: 'idle'|'loading'|'success'|'error', data?, error? }
+    state,
     next: () => canNext && setPage((p) => p + 1),
     prev: () => canPrev && setPage((p) => Math.max(1, p - 1)),
     goto: (p) => setPage(Math.max(1, Math.floor(p))),
     canNext,
     canPrev,
+    refresh: () => mutate(),
+    isValidating,
   };
 }

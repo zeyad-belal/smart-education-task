@@ -1,30 +1,23 @@
-import { useEffect, useState } from "react";
+// hooks/useProduct.js
+import useSWR from "swr";
 import { getProductById } from "../api/productsApi";
 
-export function useProduct(id) {
-  const [state, setState] = useState({ status: "idle", data: null, error: null });
+export function useProduct(id, { initialData } = {}) {
+  const key = id ? ["/product", id] : null;
 
-  useEffect(() => {
-    if (!id) return;
-    let cancelled = false;
-    setState((s) => ({ ...s, status: "loading", error: null }));
+  const { data, error, isLoading } = useSWR(
+    key,
+    // wrap sync getter so SWR sees a Promise
+    () => Promise.resolve(getProductById(id)),
+    {
+      fallbackData: initialData || undefined, // instant paint if provided
+      revalidateOnFocus: true,
+    }
+  );
 
-    Promise.resolve()
-      .then(() => getProductById(id))
-      .then((p) => {
-        if (cancelled) return;
-        if (p) setState({ status: "success", data: p, error: null });
-        else setState({ status: "error", data: null, error: new Error("Not found") });
-      })
-      .catch((e) => {
-        if (cancelled) return;
-        setState({ status: "error", data: null, error: e });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [id]);
-
-  return state; // { status, data, error }
+  if (!id) return { status: "idle", data: null, error: null };
+  if (isLoading && !data) return { status: "loading", data: null, error: null };
+  if (error) return { status: "error", data: null, error };
+  if (data) return { status: "success", data, error: null };
+  return { status: "idle", data: null, error: null };
 }
