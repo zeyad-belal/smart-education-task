@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useReducer } from 'react';
+import  { useEffect, useMemo, useReducer } from 'react';
 import { CartCtx } from './CartContext';
 
 const LS_KEY = 'cart.v1';
