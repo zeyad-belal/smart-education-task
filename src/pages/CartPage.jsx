@@ -1,5 +1,5 @@
 import { Table, Button, Space, Typography, InputNumber, Empty } from "antd";
-import { useCart } from "../context/useCart.js";
+import { useCart } from "../context/useCart.jsx";
 import ImageWithSkeleton from "../components/ImageWithSkeleton.jsx";
 const { Title } = Typography;
 

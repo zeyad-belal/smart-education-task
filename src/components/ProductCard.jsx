@@ -1,6 +1,6 @@
 import { Card, Button, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../context/useCart.js";
+import { useCart } from "../context/useCart.jsx";
 import ImageWithSkeleton from "./ImageWithSkeleton.jsx";
 
 const { Title, Text } = Typography;

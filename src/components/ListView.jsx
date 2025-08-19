@@ -1,5 +1,5 @@
 import { Space, Button } from "antd";
-import { useCart } from "../context/useCart.js";
+import { useCart } from "../context/useCart.jsx";
 import { useNavigate } from "react-router-dom";
 
 export default function ListView({ filtered }) {

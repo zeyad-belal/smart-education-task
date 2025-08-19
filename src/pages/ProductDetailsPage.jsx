@@ -1,7 +1,7 @@
 // pages/ProductDetailsPage.jsx
 import { useParams, useNavigate } from "react-router-dom";
 import { Typography, Button, Space, Card } from "antd";
-import { useCart } from "../context/useCart.js";
+import { useCart } from "../context/useCart.jsx";
 import ImageWithSkeleton from "../components/ImageWithSkeleton.jsx";
 import { useProduct } from "../hooks/useProdcut.js";
 
